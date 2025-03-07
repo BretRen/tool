@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket 试</title>
+</head>
+<body>
+    <h1>WebSocket 试</h1>
+    <button onclick="testWebSocket()">测连接</button>
+    <p id="ms">无消息</p>
+    <input id="text" type="text">
+    <button id="sub">提交</button>
+    <p id="status"></p>
+
+    <script>
+        Notification.requestPermission().then((permission) => {
+    if (permission === "granted") {
+        console.log("用户允许通知");
+        showNotification(); // 显示通知
+    } else if (permission === "denied") {
+        console.log("用户拒绝通知");
+    } else {
+        console.log("用户尚未做出选择");
+    }
+});
+function showNotification(title,text) {
+    if (Notification.permission === "granted") {
+        const notification = new Notification(title, {
+            body: text,
+        });
+
+        // 添加点击事件监听器（可选）
+        notification.onclick = () => {
+            console.log("通知被点击");
+        };
+    }
+}
+
+
+        function testWebSocket() {
+            const socket = new WebSocket('https://dapper-swan-38.deno.dev'); // 替换成你要测试的 WebSocket 地址
+            const statusElement = document.getElementById('status');
+            const ms = document.getElementById('ms');
+            const sub = document.getElementById('sub');
+            const text = document.getElementById('text');
+
+            sub.addEventListener('click', () => {
+                socket.send(text.value)
+                text.value = ""; // 清空输入框
+            });
+
+
+
+            socket.onopen = function() {
+                statusElement.textContent = '连接已建立!';
+            };
+
+            socket.onerror = function(error) {
+                statusElement.textContent = '连接失败: ' + error;
+            };
+            // Listen for messages
+            socket.addEventListener("message", function (event) {
+                console.log("Message from server ", event.data);
+                ms.textContent = event.data;
+                showNotification("你有新的标题",event.data)
+            });
+            
+
+            // socket.onclose = function() {
+            //     statusElement.textContent = '连接关闭';
+            // };
+        }
+    </script>
+</body>
+</html>
