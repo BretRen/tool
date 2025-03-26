@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>炸弹！！</title>
+    <style>
+        h1 {
+            text-align: center;
+        }
+        body, html {
+            padding: 0;
+            margin: 0;
+        }
+        body {
+            background-color: rgb(101, 212, 114);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            transition: background-color 0.5s;
+        }
+        button {
+            background-color: greenyellow;
+            border-radius: 10px;
+            border-color: green;
+            width: 500px;
+            height: 200px;
+        }
+        .timer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 500px;
+            height: 100px;
+            border-color: white;
+            border-radius: 10px;
+            border-style: dashed;
+            background-color: gray;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        progress {
+            width: 500px;
+            height: 30px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>炸弹！！！</h1>
+    <button id="start">开始</button>
+    <div id="div"></div>
+    <progress id="progressBar" value="100" max="100"></progress>
+
+    <script>
+        const start = document.getElementById("start");
+        const div = document.getElementById("div");
+        const progressBar = document.getElementById("progressBar");
+        const body = document.getElementsByTagName("body")[0];
+
+        // 创建声音生成函数
+        function playBeep(frequency, duration) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            oscillator.type = 'square'; // 使用方波来创建滴滴声
+            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime); // 设置频率（Hz）
+            oscillator.connect(audioContext.destination);
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+
+        let timeInterval; // 用于存储倒计时的setInterval
+
+        // 启动倒计时函数
+        function startCountdown() {
+            const timer = document.createElement("p");
+            timer.classList.add("timer");
+            let min = 0, sec = 10, msec = 9; // 毫秒从9开始（0.9秒）
+            let totalTime = (min * 60 + sec) * 10 + msec; // 总时间单位（100ms 步长）
+            let remainingTime = totalTime;
+
+            timer.innerText = `剩余时间：${min}:00.0`;
+            div.appendChild(timer);
+
+            // 直接调用setInterval，无论是否切换标签页都继续倒计时
+            timeInterval = setInterval(() => {
+                if (msec === 0) {
+                    if (sec === 0) {
+                        if (min === 0) {
+                            clearInterval(timeInterval);
+                            timer.innerText = "炸弹爆炸 💥！";
+                            progressBar.value = 0;
+                            playBeep(500, 2); // 爆炸时发出一个长音滴
+                            body.style.backgroundColor = 'black'; // 爆炸后变黑
+                            return;
+                        }
+                        min -= 1;
+                        sec = 59;
+                    } else {
+                        sec -= 1;
+                    }
+                    msec = 9;
+                } else {
+                    msec -= 1;
+                }
+
+                // 更新进度条
+                remainingTime--;
+                let progress = (remainingTime / totalTime) * 100;
+                progressBar.value = progress;
+
+                // 根据剩余时间改变背景颜色
+                if (progress > 50) {
+                    body.style.backgroundColor = 'rgb(101, 212, 114)'; // 绿色
+                } else if (progress > 20) {
+                    body.style.backgroundColor = 'orange'; // 橙色（警告）
+                } else {
+                    body.style.backgroundColor = 'red'; // 红色（危险）
+                }
+
+                // 播放滴滴声音：控制不同阶段的播放频率
+                if (min > 0 || sec > 30) { // 初始阶段
+                    if (remainingTime % 30 === 0) {
+                        playBeep(1000, 0.1); // 每3秒播放一次滴滴声，频率增高
+                    }
+                } else if (progress > 20) { // 警告阶段
+                    if (remainingTime % 10 === 0) {
+                        playBeep(1300, 0.05); // 每1秒播放一次滴滴声，频率更高
+                    }
+                } else if (progress > 5) { // 危险阶段
+                    if (remainingTime % 1 === 0) {
+                        playBeep(1400, 0.05); // 每0.1秒播放一次滴滴声，频率继续增高
+                    }
+                } else { // 爆炸阶段
+                    playBeep(1500, 2); // 爆炸时发出一个长滴声
+                }
+
+                // 显示格式化时间
+                if (min < 1) {
+                    timer.innerText = `剩余时间：${sec < 10 ? "0" + sec : sec}:${msec}`;
+                } else {
+                    timer.innerText = `剩余时间：${min}:${sec < 10 ? "0" + sec : sec}:${msec}`;
+                }
+            }, 100);
+        }
+
+        start.addEventListener("click", () => {
+            start.disabled = true;
+            startCountdown();
+        });
+    </script>
+</body>
+</html>
