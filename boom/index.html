@@ -45,10 +45,17 @@
             height: 30px;
             margin-top: 20px;
         }
+        input {
+            margin-top: 20px;
+            font-size: 24px;
+            padding: 10px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <h1>炸弹！！！</h1>
+    <input type="text" id="timeInput" placeholder="输入时间 (m:s:ms)" />
     <button id="start">开始</button>
     <div id="div"></div>
     <progress id="progressBar" value="100" max="100"></progress>
@@ -58,6 +65,7 @@
         const div = document.getElementById("div");
         const progressBar = document.getElementById("progressBar");
         const body = document.getElementsByTagName("body")[0];
+        const timeInput = document.getElementById("timeInput");
 
         // 创建声音生成函数
         function playBeep(frequency, duration) {
@@ -73,14 +81,13 @@
         let timeInterval; // 用于存储倒计时的setInterval
 
         // 启动倒计时函数
-        function startCountdown() {
+        function startCountdown(min, sec, msec) {
             const timer = document.createElement("p");
             timer.classList.add("timer");
-            let min = 0, sec = 10, msec = 9; // 毫秒从9开始（0.9秒）
             let totalTime = (min * 60 + sec) * 10 + msec; // 总时间单位（100ms 步长）
             let remainingTime = totalTime;
 
-            timer.innerText = `剩余时间：${min}:00.0`;
+            timer.innerText = `剩余时间：${min}:${sec < 10 ? "0" + sec : sec}:${msec}`;
             div.appendChild(timer);
 
             // 直接调用setInterval，无论是否切换标签页都继续倒计时
@@ -145,9 +152,31 @@
             }, 100);
         }
 
+        // 验证用户输入的时间格式
+        function validateTimeInput(input) {
+            const regex = /^(\d{1,2}):([0-5]?\d):([0-9]{1,2})$/;
+            const match = input.match(regex);
+            if (match) {
+                let min = parseInt(match[1]);
+                let sec = parseInt(match[2]);
+                let msec = parseInt(match[3]);
+                if (min >= 0 && sec >= 0 && msec >= 0) {
+                    return { min, sec, msec };
+                }
+            }
+            return null;
+        }
+
         start.addEventListener("click", () => {
-            start.disabled = true;
-            startCountdown();
+            const time = timeInput.value.trim();
+            const parsedTime = validateTimeInput(time);
+
+            if (parsedTime) {
+                start.disabled = true;
+                startCountdown(parsedTime.min, parsedTime.sec, parsedTime.msec);
+            } else {
+                alert("请输入有效的时间格式 (m:s:ms)，例如 1:30:20");
+            }
         });
     </script>
 </body>
